@@ -2,7 +2,6 @@ const videoElement = document.getElementById('video');
 const canvasElement = document.getElementById('output');
 const canvasCtx = canvasElement.getContext('2d');
 
-// 初始化 MediaPipe Pose
 const pose = new Pose({
   locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
 });
@@ -14,7 +13,13 @@ pose.setOptions({
   minTrackingConfidence: 0.5
 });
 
+function resizeCanvasToVideo() {
+  canvasElement.width = videoElement.videoWidth;
+  canvasElement.height = videoElement.videoHeight;
+}
+
 pose.onResults(results => {
+  resizeCanvasToVideo();
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
   canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
@@ -30,9 +35,9 @@ pose.onResults(results => {
     const angle = calculateAngle(le, ls, lh);
 
     canvasCtx.fillStyle = angle < 150 ? 'red' : 'green';
-    canvasCtx.font = 'bold 24px Arial';
-    canvasCtx.fillText(`角度: ${Math.round(angle)}°`, 20, 40);
-    canvasCtx.fillText(angle < 150 ? "駝背/前傾" : "良好坐姿", 20, 75);
+    canvasCtx.font = `bold ${Math.round(canvasElement.width / 25)}px Arial`;
+    canvasCtx.fillText(`角度: ${Math.round(angle)}°`, 20, 50);
+    canvasCtx.fillText(angle < 150 ? "駝背/前傾" : "良好坐姿", 20, 100);
   }
 
   canvasCtx.restore();

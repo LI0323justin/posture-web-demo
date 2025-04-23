@@ -3,24 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>手機版坐姿判斷</title>
+  <title>坐姿判斷系統 - 手機版</title>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
   <style>
-    body, html {
+    html, body {
       margin: 0;
       padding: 0;
+      background: #000;
       overflow: hidden;
-      background: black;
+      height: 100%;
     }
     video, canvas {
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      margin: auto;
+      object-fit: contain;
       position: absolute;
-      top: 0;
-      left: 0;
+      top: 0; left: 0; bottom: 0; right: 0;
     }
   </style>
 </head>
