@@ -2,6 +2,7 @@ const videoElement = document.getElementById('video');
 const canvasElement = document.getElementById('output');
 const canvasCtx = canvasElement.getContext('2d');
 
+// 正確方式載入 MediaPipe Pose
 const pose = new Pose({
   locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
 });
@@ -13,77 +14,45 @@ pose.setOptions({
   minTrackingConfidence: 0.5
 });
 
-function resizeCanvas() {
-  canvasElement.width = videoElement.videoWidth;
-  canvasElement.height = videoElement.videoHeight;
-}
-
 pose.onResults(results => {
-  if (!results.poseLandmarks) return;
-  resizeCanvas();
-
-  const ls = results.poseLandmarks[11]; // left shoulder
-  const le = results.poseLandmarks[7];  // left ear
-  const lh = results.poseLandmarks[23]; // left hip
-
-  const leanValue = ls.y - lh.y;
-  const headTilt = Math.atan2(le.y - ls.y, le.x - ls.x) * (180 / Math.PI);
-  const isBadPosture = (leanValue > 0.05) || (headTilt > 25);
-
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
   canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
-  // 畫上半身骨架（肩、手肘、手腕、頭部）
-  const UPPER_LANDMARKS = [
-    [11, 13], [13, 15], // 左手臂
-    [12, 14], [14, 16], // 右手臂
-    [11, 12],           // 肩膀連線
-    [11, 23], [12, 24], // 肩膀到髖部
-    [7, 8],             // 兩耳
-    [7, 0], [8, 0]      // 耳朵到鼻
-  ];
+  if (results.poseLandmarks) {
+    drawConnectors(canvasCtx, results.poseLandmarks, Pose.POSE_CONNECTIONS, {color: '#00FF00', lineWidth: 3});
+    drawLandmarks(canvasCtx, results.poseLandmarks, {color: '#FF0000', lineWidth: 2});
 
-  for (const [start, end] of UPPER_LANDMARKS) {
-    const p1 = results.poseLandmarks[start];
-    const p2 = results.poseLandmarks[end];
-    canvasCtx.beginPath();
-    canvasCtx.moveTo(p1.x * canvasElement.width, p1.y * canvasElement.height);
-    canvasCtx.lineTo(p2.x * canvasElement.width, p2.y * canvasElement.height);
-    canvasCtx.strokeStyle = isBadPosture ? '#FF3333' : '#00FF00';
-    canvasCtx.lineWidth = 4;
-    canvasCtx.stroke();
+    const ls = results.poseLandmarks[11]; // left shoulder
+    const le = results.poseLandmarks[7];  // left ear
+    const lh = results.poseLandmarks[23]; // left hip
+
+    const angle = calculateAngle(le, ls, lh);
+
+    canvasCtx.fillStyle = angle < 150 ? 'red' : 'green';
+    canvasCtx.font = '20px Arial';
+    canvasCtx.fillText(`角度: ${Math.round(angle)}°`, 20, 40);
+    canvasCtx.fillText(angle < 150 ? "駝背/前傾" : "良好坐姿", 20, 70);
   }
-
-  // 畫標示點（耳、肩、臀）
-  const points = [le, ls, lh];
-  points.forEach(p => {
-    canvasCtx.beginPath();
-    canvasCtx.arc(p.x * canvasElement.width, p.y * canvasElement.height, 8, 0, 2 * Math.PI);
-    canvasCtx.fillStyle = '#FF0000';
-    canvasCtx.fill();
-  });
-
-  const fontColor = isBadPosture ? 'red' : 'green';
-  canvasCtx.fillStyle = fontColor;
-  const fontSize = Math.round(canvasElement.width / 32);
-  canvasCtx.font = `bold ${fontSize}px Arial`;
-  canvasCtx.fillText(isBadPosture ? "不良坐姿" : "良好坐姿", 30, 50);
-
-  canvasCtx.font = `normal ${Math.round(fontSize * 0.8)}px Arial`;
-  canvasCtx.fillStyle = fontColor;
-  canvasCtx.fillText(`頭傾角: ${Math.round(headTilt)}°`, 30, 90);
-  canvasCtx.fillText(`肩臀差: ${leanValue.toFixed(2)}`, 30, 125);
 
   canvasCtx.restore();
 });
+
+function calculateAngle(a, b, c) {
+  const ab = { x: a.x - b.x, y: a.y - b.y };
+  const cb = { x: c.x - b.x, y: c.y - b.y };
+  const dot = ab.x * cb.x + ab.y * cb.y;
+  const magAB = Math.sqrt(ab.x ** 2 + ab.y ** 2);
+  const magCB = Math.sqrt(cb.x ** 2 + cb.y ** 2);
+  const angle = Math.acos(dot / (magAB * magCB));
+  return angle * (180 / Math.PI);
+}
 
 const camera = new Camera(videoElement, {
   onFrame: async () => {
     await pose.send({image: videoElement});
   },
   width: 640,
-  height: 480,
-  facingMode: 'user'
+  height: 480
 });
 camera.start();
