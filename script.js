@@ -6,7 +6,7 @@ const pose = new Pose({
   locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
 });
 pose.setOptions({
-  modelComplexity: 0, // 簡化模型提升效能
+  modelComplexity: 1,
   smoothLandmarks: true,
   enableSegmentation: false,
   minDetectionConfidence: 0.5,
@@ -22,9 +22,9 @@ pose.onResults(results => {
   if (!results.poseLandmarks) return;
   resizeCanvas();
 
-  const ls = results.poseLandmarks[11]; // shoulder
-  const le = results.poseLandmarks[7];  // ear
-  const lh = results.poseLandmarks[23]; // hip
+  const ls = results.poseLandmarks[11]; // left shoulder
+  const le = results.poseLandmarks[7];  // left ear
+  const lh = results.poseLandmarks[23]; // left hip
 
   const leanValue = ls.y - lh.y;
   const headTilt = Math.atan2(le.y - ls.y, le.x - ls.x) * (180 / Math.PI);
@@ -34,23 +34,21 @@ pose.onResults(results => {
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
   canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
-  // 畫耳朵、肩膀、臀部三點
   const points = [le, ls, lh];
   points.forEach(p => {
     canvasCtx.beginPath();
-    canvasCtx.arc(p.x * canvasElement.width, p.y * canvasElement.height, 6, 0, 2 * Math.PI);
+    canvasCtx.arc(p.x * canvasElement.width, p.y * canvasElement.height, 8, 0, 2 * Math.PI);
     canvasCtx.fillStyle = '#FF0000';
     canvasCtx.fill();
   });
 
   canvasCtx.fillStyle = isBadPosture ? 'red' : 'green';
-  const fontSize = Math.round(canvasElement.width / 25);
-  canvasCtx.font = `bold ${fontSize}px Arial`;
+  canvasCtx.font = `bold ${Math.round(canvasElement.width / 32)}px Arial`;
   canvasCtx.fillText(isBadPosture ? "駝背/前傾" : "良好坐姿", 30, 50);
 
-  canvasCtx.font = `normal ${Math.round(fontSize * 0.8)}px Arial`;
+  canvasCtx.font = `normal ${Math.round(canvasElement.width / 40)}px Arial`;
   canvasCtx.fillText(`頭傾角: ${Math.round(headTilt)}°`, 30, 90);
-  canvasCtx.fillText(`肩臀差: ${leanValue.toFixed(2)}`, 30, 130);
+  canvasCtx.fillText(`肩臀差: ${leanValue.toFixed(2)}`, 30, 125);
 
   canvasCtx.restore();
 });
@@ -59,8 +57,8 @@ const camera = new Camera(videoElement, {
   onFrame: async () => {
     await pose.send({image: videoElement});
   },
-  width: 320,  // 降低解析度提升效能
-  height: 240,
-  facingMode: 'environment'
+  width: 640,
+  height: 480,
+  facingMode: 'user'
 });
 camera.start();

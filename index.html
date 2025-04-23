@@ -2,8 +2,8 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>坐姿判斷系統 - 穩定不卡版</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>坐姿判斷系統 - 電腦版</title>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
@@ -17,7 +17,8 @@
     }
     video, canvas {
       position: absolute;
-      top: 0; left: 0;
+      top: 0;
+      left: 0;
       width: 100vw;
       height: 100vh;
       object-fit: contain;
@@ -25,7 +26,7 @@
   </style>
 </head>
 <body>
-  <video id="video" autoplay playsinline muted></video>
+  <video id="video" autoplay muted></video>
   <canvas id="output"></canvas>
   <script src="script.js"></script>
 </body>
