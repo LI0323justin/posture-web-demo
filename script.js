@@ -2,7 +2,6 @@ const videoElement = document.getElementById('video');
 const canvasElement = document.getElementById('output');
 const canvasCtx = canvasElement.getContext('2d');
 
-// 初始化 MediaPipe Pose
 const pose = new Pose({
   locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
 });
@@ -14,7 +13,6 @@ pose.setOptions({
   minTrackingConfidence: 0.5
 });
 
-// 自動調整 canvas 大小以符合實際解析度
 function resizeCanvas() {
   canvasElement.width = videoElement.videoWidth;
   canvasElement.height = videoElement.videoHeight;
@@ -37,28 +35,29 @@ pose.onResults(results => {
     radius: Math.max(2, canvasElement.width * 0.008)
   });
 
-  const ls = results.poseLandmarks[11];
-  const le = results.poseLandmarks[7];
-  const lh = results.poseLandmarks[23];
-  const angle = calculateAngle(le, ls, lh);
+  const ls = results.poseLandmarks[11]; // left shoulder
+  const le = results.poseLandmarks[7];  // left ear
+  const lh = results.poseLandmarks[23]; // left hip
 
-  canvasCtx.fillStyle = angle < 150 ? 'red' : 'green';
+  // 判斷：肩膀與臀部Y差（身體是否前傾）
+  const leanValue = ls.y - lh.y;
+
+  // 判斷：耳朵與肩膀連線是否向前傾（頭部前伸）
+  const headTilt = Math.atan2(le.y - ls.y, le.x - ls.x) * (180 / Math.PI);
+
+  // 綜合判斷駝背（任何一項條件成立）
+  const isBadPosture = (leanValue > 0.05) || (headTilt > 25);
+
+  canvasCtx.fillStyle = isBadPosture ? 'red' : 'green';
   canvasCtx.font = `bold ${Math.round(canvasElement.width / 20)}px Arial`;
-  canvasCtx.fillText(`角度: ${Math.round(angle)}°`, 30, 60);
-  canvasCtx.fillText(angle < 150 ? "駝背/前傾" : "良好坐姿", 30, 110);
+  canvasCtx.fillText(
+    isBadPosture ? "駝背/前傾" : "良好坐姿", 30, 60
+  );
+  canvasCtx.fillText(`頭傾角: ${Math.round(headTilt)}°`, 30, 100);
+  canvasCtx.fillText(`肩臀差: ${leanValue.toFixed(2)}`, 30, 140);
 
   canvasCtx.restore();
 });
-
-function calculateAngle(a, b, c) {
-  const ab = { x: a.x - b.x, y: a.y - b.y };
-  const cb = { x: c.x - b.x, y: c.y - b.y };
-  const dot = ab.x * cb.x + ab.y * cb.y;
-  const magAB = Math.sqrt(ab.x ** 2 + ab.y ** 2);
-  const magCB = Math.sqrt(cb.x ** 2 + cb.y ** 2);
-  const angle = Math.acos(dot / (magAB * magCB));
-  return angle * (180 / Math.PI);
-}
 
 const camera = new Camera(videoElement, {
   onFrame: async () => {
@@ -66,6 +65,6 @@ const camera = new Camera(videoElement, {
   },
   width: 640,
   height: 480,
-  facingMode: 'environment' // 使用後鏡頭
+  facingMode: 'environment'
 });
 camera.start();
