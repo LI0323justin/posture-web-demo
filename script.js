@@ -2,7 +2,8 @@ const videoElement = document.getElementById('video');
 const canvasElement = document.getElementById('output');
 const canvasCtx = canvasElement.getContext('2d');
 
-const pose = new Pose.Pose({
+// 正確方式載入 MediaPipe Pose
+const pose = new Pose({
   locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
 });
 pose.setOptions({
