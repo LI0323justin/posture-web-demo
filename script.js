@@ -2,7 +2,7 @@ const videoElement = document.getElementById('video');
 const canvasElement = document.getElementById('output');
 const canvasCtx = canvasElement.getContext('2d');
 
-// 正確方式載入 MediaPipe Pose
+// 初始化 MediaPipe Pose
 const pose = new Pose({
   locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
 });
@@ -23,16 +23,16 @@ pose.onResults(results => {
     drawConnectors(canvasCtx, results.poseLandmarks, Pose.POSE_CONNECTIONS, {color: '#00FF00', lineWidth: 3});
     drawLandmarks(canvasCtx, results.poseLandmarks, {color: '#FF0000', lineWidth: 2});
 
-    const ls = results.poseLandmarks[11]; // left shoulder
-    const le = results.poseLandmarks[7];  // left ear
-    const lh = results.poseLandmarks[23]; // left hip
+    const ls = results.poseLandmarks[11];
+    const le = results.poseLandmarks[7];
+    const lh = results.poseLandmarks[23];
 
     const angle = calculateAngle(le, ls, lh);
 
     canvasCtx.fillStyle = angle < 150 ? 'red' : 'green';
-    canvasCtx.font = '20px Arial';
+    canvasCtx.font = 'bold 24px Arial';
     canvasCtx.fillText(`角度: ${Math.round(angle)}°`, 20, 40);
-    canvasCtx.fillText(angle < 150 ? "駝背/前傾" : "良好坐姿", 20, 70);
+    canvasCtx.fillText(angle < 150 ? "駝背/前傾" : "良好坐姿", 20, 75);
   }
 
   canvasCtx.restore();

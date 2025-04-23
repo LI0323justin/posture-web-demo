@@ -1,23 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>坐姿判斷系統</title>
+  <title>手機版坐姿判斷</title>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
   <style>
-    canvas, video {
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: black;
+    }
+    video, canvas {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
       position: absolute;
-      left: 0;
       top: 0;
+      left: 0;
     }
   </style>
 </head>
 <body>
-  <video id="video" width="640" height="480" autoplay muted></video>
-  <canvas id="output" width="640" height="480"></canvas>
+  <video id="video" autoplay muted playsinline></video>
+  <canvas id="output"></canvas>
   <script src="script.js"></script>
 </body>
 </html>
