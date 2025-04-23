@@ -34,6 +34,28 @@ pose.onResults(results => {
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
   canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
+  // 畫上半身骨架（肩、手肘、手腕、頭部）
+  const UPPER_LANDMARKS = [
+    [11, 13], [13, 15], // 左手臂
+    [12, 14], [14, 16], // 右手臂
+    [11, 12],           // 肩膀連線
+    [11, 23], [12, 24], // 肩膀到髖部
+    [7, 8],             // 兩耳
+    [7, 0], [8, 0]      // 耳朵到鼻
+  ];
+
+  for (const [start, end] of UPPER_LANDMARKS) {
+    const p1 = results.poseLandmarks[start];
+    const p2 = results.poseLandmarks[end];
+    canvasCtx.beginPath();
+    canvasCtx.moveTo(p1.x * canvasElement.width, p1.y * canvasElement.height);
+    canvasCtx.lineTo(p2.x * canvasElement.width, p2.y * canvasElement.height);
+    canvasCtx.strokeStyle = isBadPosture ? '#FF3333' : '#00FF00';
+    canvasCtx.lineWidth = 4;
+    canvasCtx.stroke();
+  }
+
+  // 畫標示點（耳、肩、臀）
   const points = [le, ls, lh];
   points.forEach(p => {
     canvasCtx.beginPath();
@@ -42,11 +64,14 @@ pose.onResults(results => {
     canvasCtx.fill();
   });
 
-  canvasCtx.fillStyle = isBadPosture ? 'red' : 'green';
-  canvasCtx.font = `bold ${Math.round(canvasElement.width / 32)}px Arial`;
-  canvasCtx.fillText(isBadPosture ? "駝背/前傾" : "良好坐姿", 30, 50);
+  const fontColor = isBadPosture ? 'red' : 'green';
+  canvasCtx.fillStyle = fontColor;
+  const fontSize = Math.round(canvasElement.width / 32);
+  canvasCtx.font = `bold ${fontSize}px Arial`;
+  canvasCtx.fillText(isBadPosture ? "不良坐姿" : "良好坐姿", 30, 50);
 
-  canvasCtx.font = `normal ${Math.round(canvasElement.width / 40)}px Arial`;
+  canvasCtx.font = `normal ${Math.round(fontSize * 0.8)}px Arial`;
+  canvasCtx.fillStyle = fontColor;
   canvasCtx.fillText(`頭傾角: ${Math.round(headTilt)}°`, 30, 90);
   canvasCtx.fillText(`肩臀差: ${leanValue.toFixed(2)}`, 30, 125);
 
